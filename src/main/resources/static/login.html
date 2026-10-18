@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <!-- Definisce la codifica dei caratteri e l'adattamento ai dispositivi mobili. -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyChat</title>
+
+    <style>
+        /* Stile generale della pagina di autenticazione. */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f6fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #1b2a4a;
+        }
+
+        /* Pannello centrale che contiene il modulo di accesso e registrazione. */
+        #authPanel {
+            background: white;
+            width: 360px;
+            padding: 35px 30px;
+            border-radius: 16px;
+            border: 2px solid #1b2a4a;
+            box-shadow: 0 10px 25px rgba(27, 42, 74, 0.08);
+        }
+
+        /* Titolo principale dell'applicazione. */
+        h1 {
+            text-align: center;
+            color: #1b2a4a;
+            font-size: 26px;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Titolo che cambia tra la modalità di accesso e quella di registrazione. */
+        h2 {
+            text-align: center;
+            color: #475569;
+            font-size: 18px;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        /* Stile comune ai campi username e password. */
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* Evidenzia il campo attualmente selezionato. */
+        input:focus {
+            border-color: #1b2a4a;
+            box-shadow: 0 0 0 3px rgba(27, 42, 74, 0.1);
+        }
+
+        /* Pulsante principale del modulo: accesso oppure creazione account. */
+        #submitButton {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0 8px 0;
+            box-sizing: border-box;
+            background-color: #1b2a4a;
+            color: white;
+            border: 2px solid #1b2a4a;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        /* Cambia l'aspetto del pulsante principale al passaggio del mouse. */
+        #submitButton:hover {
+            background-color: #2c4270;
+            border-color: #2c4270;
+        }
+
+        /* Pulsante secondario che permette di passare da login a registrazione e viceversa. */
+        #switchButton {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            background-color: transparent;
+            color: #1b2a4a;
+            border: 2px solid #1b2a4a;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        /* Evidenzia il pulsante secondario al passaggio del mouse. */
+        #switchButton:hover {
+            background-color: #f0f4f8;
+        }
+
+        /* Area in cui vengono mostrati messaggi di stato ed errori. */
+        #status {
+            text-align: center;
+            font-size: 14px;
+            margin-top: 15px;
+            color: #64748b;
+            overflow-wrap: anywhere;
+        }
+    </style>
+</head>
+
+<body>
+<div id="authPanel">
+
+    <!-- Nome dell'applicazione e titolo dinamico del modulo. -->
+    <h1>MyChat</h1>
+    <h2 id="formTitle">Accedi</h2>
+
+    <!-- Modulo utilizzato sia per il login sia per la registrazione. -->
+    <form id="authForm">
+
+        <!-- Campo per identificare l'utente. -->
+        <input
+                id="username"
+                type="text"
+                placeholder="Username"
+                autocomplete="username"
+                required
+        >
+
+        <!-- Campo password: il browser nasconde i caratteri digitati. -->
+        <input
+                id="password"
+                type="password"
+                placeholder="Password (minimo 8 caratteri)"
+                autocomplete="current-password"
+                required
+        >
+
+        <!-- Il testo del pulsante cambia in base alla modalità selezionata. -->
+        <button id="submitButton" type="submit">Accedi</button>
+    </form>
+
+    <!-- Consente di passare dalla modalità login alla registrazione. -->
+    <button id="switchButton" type="button">
+        Non hai un account? Registrati
+    </button>
+
+    <!-- Area accessibile utilizzata per comunicare esiti ed errori all'utente. -->
+    <p id="status" role="status"></p>
+</div>
+
+<script>
+    // Recupera gli elementi HTML che verranno utilizzati dal codice JavaScript.
+    const authForm = document.getElementById("authForm");
+    const usernameInput = document.getElementById("username");
+    const passwordInput = document.getElementById("password");
+    const formTitle = document.getElementById("formTitle");
+    const submitButton = document.getElementById("submitButton");
+    const switchButton = document.getElementById("switchButton");
+    const status = document.getElementById("status");
+
+    // Indica se il modulo è in modalità registrazione.
+    // false = login; true = registrazione.
+    let modalitaRegistrazione = false;
+
+    // Gestisce il passaggio tra le due modalità del modulo.
+    switchButton.addEventListener("click", () => {
+
+        // Inverte il valore: false diventa true e true diventa false.
+        modalitaRegistrazione = !modalitaRegistrazione;
+
+        if (modalitaRegistrazione) {
+            // Aggiorna i testi e le impostazioni per la registrazione.
+            formTitle.textContent = "Registrati";
+            submitButton.textContent = "Crea account";
+            switchButton.textContent = "Hai già un account? Accedi";
+
+            // Suggerisce al browser che si sta creando una nuova password.
+            passwordInput.autocomplete = "new-password";
+        } else {
+            // Ripristina i testi e le impostazioni per il login.
+            formTitle.textContent = "Accedi";
+            submitButton.textContent = "Accedi";
+            switchButton.textContent = "Non hai un account? Registrati";
+
+            // Suggerisce al browser di utilizzare una password già esistente.
+            passwordInput.autocomplete = "current-password";
+        }
+
+        // Elimina eventuali messaggi precedenti quando si cambia modalità.
+        status.textContent = "";
+    });
+
+    // Gestisce l'invio del modulo in modo asincrono.
+    authForm.addEventListener("submit", async (event) => {
+
+        // Impedisce al browser di ricaricare la pagina al submit.
+        event.preventDefault();
+
+        // Recupera lo username eliminando gli spazi iniziali e finali.
+        const username = usernameInput.value.trim();
+
+        // Recupera la password senza modificarla.
+        const password = passwordInput.value;
+
+        // Sceglie l'endpoint REST in base alla modalità corrente.
+        const endpoint = modalitaRegistrazione
+            ? "/api/auth/register"
+            : "/api/auth/login";
+
+        // Mostra lo stato dell'operazione e disabilita temporaneamente il pulsante.
+        status.textContent = "Operazione in corso...";
+        submitButton.disabled = true;
+
+        try {
+            // Invia username e password al backend tramite una richiesta HTTP POST.
+            const risposta = await fetch(endpoint, {
+                method: "POST",
+
+                // Indica al server che il corpo della richiesta contiene JSON.
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                // Converte i dati JavaScript in una stringa JSON.
+                body: JSON.stringify({ username, password })
+            });
+
+            // Converte la risposta JSON del server in un oggetto JavaScript.
+            const risultato = await risposta.json();
+
+            // Se il server restituisce uno stato HTTP di errore, genera un'eccezione.
+            if (!risposta.ok) {
+                throw new Error(
+                    risultato.errore || "Operazione non riuscita."
+                );
+            }
+
+            if (modalitaRegistrazione) {
+                // Dopo la registrazione, riporta il modulo alla modalità login.
+                modalitaRegistrazione = false;
+                formTitle.textContent = "Accedi";
+                submitButton.textContent = "Accedi";
+                switchButton.textContent = "Non hai un account? Registrati";
+                passwordInput.autocomplete = "current-password";
+
+                // Informa l'utente che l'account è stato creato.
+                status.textContent =
+                    "Account creato. Ora puoi accedere.";
+            } else {
+                // Dopo un login riuscito, apre la pagina principale della chat.
+                window.location.href = "/";
+            }
+
+        } catch (errore) {
+            // Visualizza l'errore restituito dal server o generato durante la richiesta.
+            status.textContent = errore.message;
+
+        } finally {
+            // Riabilita il pulsante anche se la richiesta fallisce.
+            submitButton.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>

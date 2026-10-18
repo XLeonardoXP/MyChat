@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <!-- Definisce la codifica dei caratteri e l'adattamento ai dispositivi mobili. -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyChat</title>
+
+    <style>
+        /* Stile generale della pagina. */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f6fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #1b2a4a;
+        }
+
+        /* Contenitore principale della chat. */
+        #chatContainer {
+            background: white;
+            width: 780px;
+            max-width: 95%;
+            padding: 30px;
+            border-radius: 16px;
+            border: 2px solid #1b2a4a;
+            box-shadow: 0 10px 25px rgba(27, 42, 74, 0.08);
+            box-sizing: border-box;
+        }
+
+        /* Titolo principale della pagina. */
+        h1 {
+            text-align: center;
+            color: #1b2a4a;
+            font-size: 26px;
+            letter-spacing: 1px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        /* Barra superiore con il nome dell'utente e il pulsante di uscita. */
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f0f4f8;
+            padding: 12px 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        /* Pulsante per effettuare il logout. */
+        #logoutButton {
+            background-color: transparent;
+            color: #1b2a4a;
+            border: 2px solid #1b2a4a;
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        /* Cambia i colori del pulsante quando il mouse passa sopra. */
+        #logoutButton:hover {
+            background-color: #1b2a4a;
+            color: white;
+        }
+
+        /* Dispone la chat e la lista degli utenti su due colonne. */
+        .chat-body-layout {
+            display: flex;
+            gap: 20px;
+        }
+
+        /* Sezione principale contenente i messaggi e il modulo di invio. */
+        .chat-main-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Area che visualizza la cronologia e i nuovi messaggi. */
+        #messages {
+            height: 320px;
+            overflow-y: auto;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: #ffffff;
+        }
+
+        /* Aspetto dei singoli messaggi nella conversazione. */
+        #messages p.message-item {
+            margin: 8px 0;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            font-size: 14px;
+            border-left: 3px solid #1b2a4a;
+        }
+
+        /* Separatore visivo che indica il giorno dei messaggi. */
+        .date-separator {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 18px 0 10px 0;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        /* Linee decorative ai lati della data. */
+        .date-separator::before,
+        .date-separator::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #cbd5e1;
+        }
+
+        .date-separator::before {
+            margin-right: 12px;
+        }
+
+        .date-separator::after {
+            margin-left: 12px;
+        }
+
+        /* Sidebar dedicata agli utenti attualmente online. */
+        #onlineUsersContainer {
+            width: 200px;
+            background: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 12px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            max-height: 380px;
+        }
+
+        /* Titolo della lista degli utenti online. */
+        #onlineUsersContainer h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #1b2a4a;
+            margin: 0 0 10px 0;
+            text-align: center;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 8px;
+        }
+
+        /* La lista può scorrere se contiene molti utenti. */
+        #onlineUsersList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Aspetto di ogni utente nella sidebar. */
+        #onlineUsersList li {
+            padding: 7px 10px;
+            margin-bottom: 6px;
+            background: white;
+            border-radius: 6px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #e2e8f0;
+            word-break: break-all;
+        }
+
+        /* Pallino verde che indica visivamente lo stato online. */
+        #onlineUsersList li::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            min-width: 8px;
+            background-color: #22c55e;
+            border-radius: 50%;
+        }
+
+        /* Dispone il campo di testo e il pulsante di invio sulla stessa riga. */
+        #messageForm {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Stile dei campi di input. */
+        input {
+            flex: 1;
+            padding: 12px 15px;
+            box-sizing: border-box;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* Evidenzia il campo quando viene selezionato. */
+        input:focus {
+            border-color: #1b2a4a;
+            box-shadow: 0 0 0 3px rgba(27, 42, 74, 0.1);
+        }
+
+        /* Pulsante per inviare un messaggio. */
+        #messageForm button[type="submit"] {
+            background-color: #1b2a4a;
+            color: white;
+            border: 2px solid #1b2a4a;
+            border-radius: 25px;
+            padding: 0 22px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        /* Effetto visivo del pulsante di invio al passaggio del mouse. */
+        #messageForm button[type="submit"]:hover {
+            background-color: #2c4270;
+            border-color: #2c4270;
+        }
+
+        /* Adatta la disposizione a schermi piccoli. */
+        @media (max-width: 768px) {
+            .chat-body-layout {
+                flex-direction: column;
+            }
+
+            #onlineUsersContainer {
+                width: 100%;
+                max-height: 150px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div id="chatContainer">
+    <h1>MyChat</h1>
+
+    <!-- Mostra il nome dell'utente autenticato e permette di uscire. -->
+    <div class="chat-header">
+        <div id="userInfo">
+            Utente: <strong id="currentUsername"></strong>
+        </div>
+        <button id="logoutButton" type="button">Esci</button>
+    </div>
+
+    <!-- Corpo della chat: conversazione a sinistra e utenti online a destra. -->
+    <div class="chat-body-layout">
+
+        <!-- Area dei messaggi e del modulo per inviarne di nuovi. -->
+        <div class="chat-main-section">
+            <div id="messages">
+                <!-- JavaScript inserirà qui i messaggi e i separatori delle date. -->
+            </div>
+
+            <form id="messageForm">
+                <input
+                        id="content"
+                        type="text"
+                        placeholder="Scrivi un messaggio..."
+                        autocomplete="off"
+                        required
+                >
+                <button type="submit">Invia</button>
+            </form>
+        </div>
+
+        <!-- Sidebar aggiornata dinamicamente con gli utenti online. -->
+        <div id="onlineUsersContainer">
+            <h3>Online</h3>
+            <ul id="onlineUsersList">
+                <li>Caricamento utenti...</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Libreria STOMP: permette al client JavaScript di comunicare via WebSocket. -->
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+
+<script>
+    // Recupera dal documento gli elementi HTML usati dal codice JavaScript.
+    const contentInput = document.getElementById("content");
+    const messages = document.getElementById("messages");
+    const messageForm = document.getElementById("messageForm");
+    const logoutButton = document.getElementById("logoutButton");
+
+    // Riferimento al client STOMP e alla data dell'ultimo separatore inserito.
+    let client = null;
+    let ultimaDataMostrata = "";
+
+    // Gestisce l'uscita dell'utente dalla chat.
+    logoutButton.addEventListener("click", async () => {
+        // Chiude prima la connessione WebSocket, se è stata creata.
+        if (client) {
+            await client.deactivate();
+        }
+
+        // Chiede al server di invalidare la sessione di autenticazione.
+        try {
+            await fetch("/api/auth/logout", {
+                method: "POST"
+            });
+        } catch (errore) {
+            console.error("Errore durante il logout:", errore);
+        }
+
+        // Reindirizza alla pagina di login.
+        window.location.href = "/login.html";
+    });
+
+    // Recupera dal backend le informazioni dell'utente autenticato.
+    async function caricaUtenteCorrente() {
+        const risposta = await fetch("/api/auth/me");
+
+        // Se la sessione non è valida, torna alla pagina di login.
+        if (!risposta.ok) {
+            window.location.href = "/login.html";
+            return false;
+        }
+
+        // Visualizza il nome dell'utente restituito dal server.
+        const utente = await risposta.json();
+        document.getElementById("currentUsername").textContent = utente.username;
+
+        return true;
+    }
+
+    // Recupera dal database la cronologia dei messaggi.
+    async function caricaCronologia() {
+        try {
+            const risposta = await fetch("/api/messaggi");
+
+            if (!risposta.ok) {
+                throw new Error("Errore nel recupero dei messaggi");
+            }
+
+            const messaggiSalvati = await risposta.json();
+
+            // Ordina i messaggi dal più vecchio al più recente.
+            messaggiSalvati.sort((a, b) =>
+                new Date(a.timestamp) - new Date(b.timestamp)
+            );
+
+            // Inserisce nella pagina ogni messaggio recuperato.
+            messaggiSalvati.forEach((messaggio) => {
+                mostraMessaggio(messaggio);
+            });
+        } catch (errore) {
+            console.error("Errore nel caricamento della cronologia:", errore);
+        }
+    }
+
+    // Crea gli elementi HTML necessari per visualizzare un messaggio.
+    function mostraMessaggio(messaggio) {
+        const data = new Date(messaggio.timestamp);
+
+        // Formatta la data secondo le convenzioni italiane.
+        const stringaData = data.toLocaleDateString("it-IT", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        });
+
+        // Inserisce un separatore quando cambia il giorno dei messaggi.
+        if (stringaData !== ultimaDataMostrata) {
+            ultimaDataMostrata = stringaData;
+
+            const divData = document.createElement("div");
+            divData.className = "date-separator";
+            divData.textContent = stringaData;
+            messages.appendChild(divData);
+        }
+
+        // Formatta l'orario e costruisce il testo del messaggio.
+        const orario = data.toLocaleTimeString("it-IT", {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+
+        const elemento = document.createElement("p");
+        elemento.className = "message-item";
+
+        // textContent inserisce il testo senza interpretarlo come HTML.
+        elemento.textContent =
+            "[" + orario + "] " +
+            messaggio.username + ": " +
+            messaggio.content;
+
+        // Aggiunge il messaggio e scorre automaticamente in fondo alla chat.
+        messages.appendChild(elemento);
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    // Aggiorna la lista degli utenti online nella sidebar.
+    function mostraUtentiOnline(utenti) {
+        const lista = document.getElementById("onlineUsersList");
+
+        // Rimuove gli elementi precedenti prima di mostrare la nuova lista.
+        lista.replaceChildren();
+
+        // Se non ci sono utenti, mostra un messaggio informativo.
+        if (utenti.length === 0) {
+            const elemento = document.createElement("li");
+            elemento.textContent = "Nessun utente online";
+            lista.appendChild(elemento);
+            return;
+        }
+
+        // Ordina alfabeticamente i nomi secondo le regole italiane.
+        utenti.sort((a, b) => a.localeCompare(b, "it"));
+
+        // Crea un elemento HTML per ogni utente connesso.
+        utenti.forEach((username) => {
+            const elemento = document.createElement("li");
+            elemento.textContent = username;
+            lista.appendChild(elemento);
+        });
+    }
+
+    // Crea il client STOMP e configura la connessione al server WebSocket.
+    client = new StompJs.Client({
+        brokerURL: "ws://localhost:8080/chat",
+
+        // Questo callback viene eseguito quando la connessione STOMP è attiva.
+        onConnect: () => {
+            console.log("Connesso alla chat!");
+
+            // Si iscrive al canale che distribuisce i nuovi messaggi.
+            client.subscribe("/topic/messaggi", (message) => {
+                const messaggio = JSON.parse(message.body);
+                mostraMessaggio(messaggio);
+            });
+
+            // Richiede la lista iniziale degli utenti online al controller.
+            client.subscribe("/app/utenti-online", (message) => {
+                console.log("Elenco iniziale ricevuto:", message.body);
+
+                const utenti = JSON.parse(message.body);
+                mostraUtentiOnline(utenti);
+            });
+
+            // Riceve gli aggiornamenti della lista quando utenti entrano o escono.
+            client.subscribe("/topic/utenti-online", (message) => {
+                console.log("Aggiornamento utenti online:", message.body);
+
+                const utenti = JSON.parse(message.body);
+                mostraUtentiOnline(utenti);
+            });
+        },
+
+        // Registra gli errori STOMP comunicati dal server.
+        onStompError: (frame) => {
+            console.error("Errore STOMP:", frame.headers.message);
+        },
+
+        // Registra gli errori del livello WebSocket.
+        onWebSocketError: (error) => {
+            console.error("Errore WebSocket:", error);
+        }
+    });
+
+    // Avvia la chat solo dopo aver verificato l'autenticazione e caricato la cronologia.
+    async function avviaChat() {
+        const autenticato = await caricaUtenteCorrente();
+
+        if (!autenticato) {
+            return;
+        }
+
+        await caricaCronologia();
+
+        // Apre la connessione WebSocket e attiva le sottoscrizioni.
+        client.activate();
+    }
+
+    // Avvia la procedura di inizializzazione della pagina.
+    avviaChat();
+
+    // Gestisce l'invio di un messaggio dal modulo HTML.
+    messageForm.addEventListener("submit", (event) => {
+        // Evita il ricaricamento della pagina previsto dal comportamento del form.
+        event.preventDefault();
+
+        // Rimuove gli spazi iniziali e finali dal messaggio.
+        const content = contentInput.value.trim();
+
+        if (!content) {
+            alert("Inserisci un messaggio.");
+            return;
+        }
+
+        // Impedisce l'invio se il client non è ancora connesso.
+        if (!client.connected) {
+            alert("Connessione alla chat non ancora disponibile.");
+            return;
+        }
+
+        // Invia il contenuto al backend tramite la destinazione STOMP /app/chat.
+        client.publish({
+            destination: "/app/chat",
+            body: JSON.stringify({
+                content: content
+            })
+        });
+
+        // Svuota il campo dopo l'invio.
+        contentInput.value = "";
+    });
+</script>
+</body>
+</html>
